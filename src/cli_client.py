@@ -11,9 +11,11 @@ def get_token(username, password):
         TOKEN = resp.json()["access_token"]
     else:
         print("Authentication failed")
-        exit(1)
+        raise Exception("Authentication failed")
 
 def auth_header():
+    if TOKEN is None:
+        raise Exception("Token is not initialized")
     return {"Authorization": f"Bearer {TOKEN}",
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'}
 
@@ -24,11 +26,17 @@ def add_event(args):
         "tags": args.tags
     }
     resp = requests.post(f"{SERVER}/add_event", json=payload,  headers=auth_header())
-    print(resp.json())
+    if resp.ok:
+        print(resp.json())
+    else:
+        print("Failed to add event")
 
 def list_events(args):
     resp = requests.get(f"{SERVER}/list_events", headers=auth_header())
-    print(resp.json())
+    if resp.ok:
+        print(resp.json())
+    else:
+        print("Failed to list events")
 
 def remove_events(args):
     payload = {
@@ -36,8 +44,11 @@ def remove_events(args):
         "stop": args.stop,
         "tags": args.tags
     }
-    resp = requests.post(f"{SERVER}/remove_events", json=payload, headers=auth_header())
-    print(resp.json())
+    resp = requests.delete(f"{SERVER}/remove_events", json=payload, headers=auth_header())
+    if resp.ok:
+        print(resp.json())
+    else:
+        print("Failed to remove event")
 
 parser = argparse.ArgumentParser(description="CLI Client for Event Manager")
 parser.add_argument("--user", required=True)

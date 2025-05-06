@@ -8,13 +8,15 @@ from jwt.exceptions import InvalidTokenError
 from pymongo import MongoClient
 from passlib.context import CryptContext
 import os
+from dotenv import load_dotenv
 
 from models import Event, User, Token, TokenData, UserInDB
+
+load_dotenv('../.env')
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 TOKEN_ALGORITHM = "HS256"
 SECRET_KEY= os.getenv("SECRET")
-print(SECRET_KEY)
 
 app = FastAPI()
 
@@ -101,23 +103,17 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return current_user
-
 @app.post("/add_event")
-async def add_event(event: Event):
+async def add_event(event: Event, token: str = Depends(oauth2_scheme)):
     events_collection.insert_one(event.dict())
     return {"message": "Event added successfully"}
 
 @app.get("/list_events")
-async def list_events():
+async def list_events(token: str = Depends(oauth2_scheme)):
     events = list(events_collection.find({}, {"_id": 0}))
     return events
 
 @app.post("/remove_events")
-async def remove_events(event: Event):
+async def remove_events(event: Event, token: str = Depends(oauth2_scheme)):
     result = events_collection.delete_many(event.dict())
     return {"deleted_count": result.deleted_count}
