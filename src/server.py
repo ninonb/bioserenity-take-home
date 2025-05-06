@@ -12,11 +12,11 @@ from dotenv import load_dotenv
 
 from models import Event, User, Token, TokenData, UserInDB
 
-load_dotenv('../.env')
+load_dotenv("../.env")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 TOKEN_ALGORITHM = "HS256"
-SECRET_KEY= os.getenv("SECRET")
+SECRET_KEY = os.getenv("SECRET")
 
 app = FastAPI()
 
@@ -34,11 +34,14 @@ def get_user_from_db(username: str):
     user_dict = users_collection.find_one({"username": username})
     return UserInDB(**user_dict)
 
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
+
 
 def authenticate_user(username: str, password: str):
     user = get_user_from_db(username)
@@ -47,6 +50,7 @@ def authenticate_user(username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -57,6 +61,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=TOKEN_ALGORITHM)
     return encoded_jwt
+
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -103,15 +108,18 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+
 @app.post("/add_event")
 async def add_event(event: Event, token: str = Depends(oauth2_scheme)):
     events_collection.insert_one(event.dict())
     return {"message": "Event added successfully"}
 
+
 @app.get("/list_events")
 async def list_events(token: str = Depends(oauth2_scheme)):
     events = list(events_collection.find({}, {"_id": 0}))
     return events
+
 
 @app.post("/remove_events")
 async def remove_events(event: Event, token: str = Depends(oauth2_scheme)):

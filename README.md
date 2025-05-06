@@ -13,7 +13,7 @@ python cli_client.py --user nancy --password secret list
 python cli_client.py --user nancy --password secret remove --tags work
 ```
 
-Future implementations:
+## Future implementations:
 * Add collection with 'users' and their passwords in MongoDB, so that they log into the database.
 * Can change so that `add_event` could perform bulk insert operations, instead of using `insert_one` with `pymongo`, we would use `insert_many` and allow the user to pass a list as the first argument.
 * Implement a cache for the token.
