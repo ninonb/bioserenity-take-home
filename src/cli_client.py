@@ -1,53 +1,60 @@
 import argparse
 import requests
 
-SERVER = "http://127.0.0.1:8000/"
+SERVER = "http://127.0.0.1:8000"
 TOKEN = None
-
 
 def get_token(username, password):
     global TOKEN
-    resp = requests.post(
-        f"{SERVER}/token", data={"username": username, "password": password}
-    )
-    if resp.status_code == 200:
+    try:
+        resp = requests.post(
+            f"{SERVER}/token", data={"username": username, "password": password}
+        )
+    except:
+        raise Exception("Token generation failed! Argh!")
+    if resp.ok:
         TOKEN = resp.json()["access_token"]
     else:
-        print("Authentication failed")
-        raise Exception("Authentication failed")
+        raise Exception(resp.text)
 
 
 def auth_header():
     if TOKEN is None:
-        raise Exception("Token is not initialized")
-    return {
-        "Authorization": f"Bearer {TOKEN}",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36",
-    }
+        raise Exception("Token is not initialized!")
+    return {"Authorization": f"Bearer {TOKEN}"}
 
 
 def add_event(args):
     payload = {"start": args.start, "stop": args.stop, "tags": args.tags}
-    resp = requests.post(f"{SERVER}/add_event", json=payload, headers=auth_header())
+    try:
+        resp = requests.post(f"{SERVER}/add_event", json=payload, headers=auth_header())
+    except:
+        raise Exception("Unable to add event")
     if resp.ok:
         print(resp.json())
     else:
-        print("Failed to add event")
+        print(f"Failed to add event: {resp}")
 
 
 def list_events(args):
-    resp = requests.get(f"{SERVER}/list_events", headers=auth_header())
+    try:
+        resp = requests.get(f"{SERVER}/list_events", headers=auth_header())
+    except:
+        raise Exception("Unable to list events")
     if resp.ok:
         print(resp.json())
     else:
-        print("Failed to list events")
+        print(f"Failed to list events: {resp}")
 
 
 def remove_events(args):
     payload = {"start": args.start, "stop": args.stop, "tags": args.tags}
-    resp = requests.delete(
-        f"{SERVER}/remove_events", json=payload, headers=auth_header()
-    )
+    try:
+        resp = requests.delete(
+            f"{SERVER}/remove_events", json=payload, headers=auth_header()
+        )
+    except:
+        raise Exception("Unable to remove events")
     if resp.ok:
         print(resp.json())
     else:

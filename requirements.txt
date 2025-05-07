@@ -2,7 +2,9 @@ fastapi
 uvicorn
 pymongo
 bcrypt==4.0.1
+jwt
 passlib[bcrypt]
 python-dotenv
 pytest
+requests
 httpx
